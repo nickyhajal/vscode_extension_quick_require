@@ -11,6 +11,7 @@ function isLocalRequire(line) {
 
 module.exports = function(codeBlock, placeWithExternals) {
     let candidate = 0;
+    let requiresStarted = false;
     for (let i = 0; i < codeBlock.length; i += 1) {
         const line = codeBlock[i];
         if (isRequire(line) && (
@@ -18,9 +19,12 @@ module.exports = function(codeBlock, placeWithExternals) {
             (placeWithExternals && !isLocalRequire(line))
            )
         ) {
+            requiresStarted = true;
             candidate = i + 1;
         } else if (!isCommentOrEmpty(line)) {
             break;
+        } else if (isCommentOrEmpty(line) && !requiresStarted) {
+            candidate = i + 1;
         }
     }
     return candidate;
