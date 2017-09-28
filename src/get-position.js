@@ -1,14 +1,22 @@
 const _ = require('lodash');
 const isRequire = require('./is-require');
 
-function isCommentOrEmpty(line) {
-    return _.isEmpty(line) ||
-    line.match(/^\s*\/\//) ||
+function isComment(line) {
+    return line.match(/^\s*\/\//) ||
     line.match(/^\s*["']use strict["']/);
+}
+
+function isCommentOrEmpty(line) {
+    return _.isEmpty(line) || isComment(line);
 }
 
 function isLocalRequire(line) {
     return line.match(/require\([\s]?['|"][.|/]/) || line.match(/^import.*from\s['|"][.|/]/);
+}
+
+function isTypeDefinition(line) {
+    const parts = line.split(' ');
+    return (parts[0] === 'import' && parts[1] === 'type' && parts[2] !== 'from');
 }
 
 function isInBracketOrComment(line, context) {
@@ -53,8 +61,9 @@ module.exports = function(codeBlock, placeWithExternals) {
         // if we're not in the appropriate section for the new import.
         // Also, mark that the require section has started
         } else if (isRequire(line) && (
-            !placeWithExternals ||
-            (placeWithExternals && !isLocalRequire(line))
+            (!placeWithExternals ||
+            (placeWithExternals && !isLocalRequire(line))) &&
+            !isTypeDefinition(line)
            )
         ) {
             requiresStarted = true;
@@ -62,7 +71,7 @@ module.exports = function(codeBlock, placeWithExternals) {
 
         // If the requires section hasn't started yet and we're at a
         // comment, bump candidate up
-        } else if (isCommentOrEmpty(line) && !requiresStarted) {
+        } else if (isComment(line) && !requiresStarted) {
             candidate = i + 1;
 
         // If the requires section has started and we're not on a
