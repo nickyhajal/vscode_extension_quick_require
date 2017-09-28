@@ -13,7 +13,9 @@
   "galleryBanner": {
     "color": "#bdc3c7"
   },
-  "categories": ["Other"],
+  "categories": [
+    "Other"
+  ],
   "activationEvents": [
     "onLanguage:javascript",
     "onCommand:bitk_node_require.require",
@@ -27,24 +29,39 @@
       "properties": {
         "bitk_node_require.include": {
           "type": "array",
-          "default": ["js", "ts", "jsx", "tsx"],
+          "default": [
+            "js",
+            "ts",
+            "jsx",
+            "tsx"
+          ],
           "description": "include files to search for"
+        },
+        "bitk_node_require.use_semicolon": {
+          "type": "boolean",
+          "default": true,
+          "description": "Adds a semicolon at the end of the require statement"
         },
         "bitk_node_require.exclude": {
           "type": "array",
-          "default": ["node_modules", "typings", "dist", "bin", "build", "tmp"],
+          "default": [
+            "node_modules",
+            "typings",
+            "dist",
+            "bin",
+            "build",
+            "tmp"
+          ],
           "description": "defines files and folders to exclude"
         },
         "bitk_node_require.search_module_files": {
           "type": "boolean",
           "default": false,
-          "description":
-            "whether we want to search files inside node module directories (performance might be sluggish)"
+          "description": "whether we want to search files inside node module directories (performance might be sluggish)"
         },
         "bitk_node_require.aliases": {
           "type": "object",
-          "description":
-            "A mapping from module name to a different alias (the variable name it is assigned to)",
+          "description": "A mapping from module name to a different alias (the variable name it is assigned to)",
           "default": {
             "backbone": "Backbone",
             "backbone.marionette": "Marionette",
