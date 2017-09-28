@@ -2,8 +2,11 @@ const _ = require('lodash');
 const isRequire = require('./is-require');
 
 function isComment(line) {
-    return line.match(/^\s*\/\//) ||
-    line.match(/^\s*["']use strict["']/);
+    return (
+        line.match(/^\s*\/\//) ||
+        line.match(/^\s*["']use strict["']/) ||
+        line.match(/^\s*(\/\/|\/\*)/)
+    );
 }
 
 function isCommentOrEmpty(line) {
@@ -11,16 +14,22 @@ function isCommentOrEmpty(line) {
 }
 
 function isLocalRequire(line) {
-    return line.match(/require\([\s]?['|"][.|/]/) || line.match(/^import.*from\s['|"][.|/]/);
+    return (
+        line.match(/require\([\s]?['|"][.|/]/) ||
+        line.match(/^import.*from\s['|"][.|/]/)
+    );
 }
 
 function isTypeDefinition(line) {
     const parts = line.split(' ');
-    return (parts[0] === 'import' && parts[1] === 'type' && parts[2] !== 'from');
+    return parts[0] === 'import' && parts[1] === 'type' && parts[2] !== 'from';
 }
 
 function isInBracketOrComment(line, context) {
     let { inBlockComment, inBracket } = context;
+
+    // If we haven't been in a comment or bracket,
+    // check if we are
     if (!inBlockComment && !inBracket) {
         if (line.match(/\/\*/)) {
             inBlockComment = true;
@@ -29,6 +38,8 @@ function isInBracketOrComment(line, context) {
             inBracket = true;
         }
     }
+
+    // Check if the bracket or comment ends
     if (inBlockComment && line.match(/\*\//)) {
         inBlockComment = false;
     }
@@ -40,7 +51,6 @@ function isInBracketOrComment(line, context) {
         inBracket,
     };
 }
-
 module.exports = function(codeBlock, placeWithExternals) {
     let candidate = 0;
     let context = {
@@ -54,17 +64,20 @@ module.exports = function(codeBlock, placeWithExternals) {
 
         // If we're in a comment or bracket, the candidate is
         // 2 positions out (to account for the closing tag)
-        if (context.inBlockComment || context.inBracket) {
+        if (
+            context.inBlockComment ||
+            (context.inBracket && !isTypeDefinition(line))
+        ) {
             candidate = i + 2;
 
         // If the current line is an import bump the candidate up
         // if we're not in the appropriate section for the new import.
         // Also, mark that the require section has started
-        } else if (isRequire(line) && (
-            (!placeWithExternals ||
-            (placeWithExternals && !isLocalRequire(line))) &&
-            !isTypeDefinition(line)
-           )
+        } else if (
+            isRequire(line) &&
+            ((!placeWithExternals ||
+                (placeWithExternals && !isLocalRequire(line))) &&
+                !isTypeDefinition(line))
         ) {
             requiresStarted = true;
             candidate = i + 1;
